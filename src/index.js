@@ -1,9 +1,12 @@
+import 'babel-polyfill';
 import puppeteer from 'puppeteer'
 import genericPool from 'generic-pool'
 import initDebug from 'debug'
 const debug = initDebug('puppeteer-pool')
 
 const initPuppeteerPool = ({
+  initUrl = null,
+  // optional. if you set this, this page will be loaded on instance creation
   max = 10,
   // optional. if you set this, make sure to drain() (see step 3)
   min = 2,
@@ -18,7 +21,18 @@ const initPuppeteerPool = ({
 } = {}) => {
   // TODO: randomly destroy old instances to avoid resource leak?
   const factory = {
-    create: () => puppeteer.launch(puppeteerArgs).then(instance => {
+    create: () => puppeteer.launch(puppeteerArgs).then(async (instance) => {
+      if (initUrl) {
+        const open_pages = await instance.pages();
+
+        try {
+          const page = (open_pages.length !== 0 ? open_pages[0] : await instance.newPage());
+          await page.goto(initUrl, { waitUntil: 'networkidle2' });
+        } catch (error) {
+          throw error;
+        }
+      }
+
       instance.useCount = 0
       return instance
     }),
