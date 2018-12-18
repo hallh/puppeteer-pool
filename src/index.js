@@ -1,8 +1,9 @@
-import 'babel-polyfill';
-import puppeteer from 'puppeteer'
+import 'babel-polyfill'
 import genericPool from 'generic-pool'
-import initDebug from 'debug'
-const debug = initDebug('puppeteer-pool')
+import puppeteer from 'puppeteer'
+
+// import initDebug from 'debug'
+// const debug = initDebug('puppeteer-pool')
 
 const initPuppeteerPool = ({
   initUrl = null,
@@ -23,13 +24,13 @@ const initPuppeteerPool = ({
   const factory = {
     create: () => puppeteer.launch(puppeteerArgs).then(async (instance) => {
       if (initUrl) {
-        const open_pages = await instance.pages();
+        const open_pages = await instance.pages()
 
         try {
-          const page = (open_pages.length !== 0 ? open_pages[0] : await instance.newPage());
-          await page.goto(initUrl, { waitUntil: 'networkidle2' });
+          const page = (open_pages.length !== 0 ? open_pages[0] : await instance.newPage())
+          await page.goto(initUrl, { waitUntil: 'networkidle2' })
         } catch (error) {
-          throw error;
+          throw error
         }
       }
 
@@ -39,10 +40,9 @@ const initPuppeteerPool = ({
     destroy: (instance) => {
       instance.close()
     },
-    validate: (instance) => {
-      return validator(instance)
-        .then(valid => Promise.resolve(valid && (maxUses <= 0 || instance.useCount < maxUses)))
-    },
+    validate: (instance) => validator(instance).then(
+      valid => Promise.resolve(valid && (maxUses <= 0 || instance.useCount < maxUses))
+    ),
   }
   const config = {
     max,
